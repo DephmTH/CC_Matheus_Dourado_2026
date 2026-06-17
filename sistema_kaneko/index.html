@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Nacional - Nexora Global</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+    <!-- ESTILOS GLOBAIS DE ACESSIBILIDADE E MODO ESCURO -->
+    <style>
+        /* Widget Flutuante */
+        .acessibilidade-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            align-items: center;
+        }
+        .acessibilidade-widget button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            color: #475569;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+        .acessibilidade-widget button:hover { color: #0f172a; transform: scale(1.15); }
+
+        /* MODO ESCURO */
+        body.dark-mode { background-color: #0f172a !important; color: #f8fafc !important; }
+        body.dark-mode .card, body.dark-mode .modal-content, body.dark-mode .sidebar { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #475569 !important; }
+        body.dark-mode .content-header h1, body.dark-mode h3, body.dark-mode h2 { color: #f8fafc !important; }
+        body.dark-mode table th { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        body.dark-mode table td { border-color: #334155 !important; }
+        body.dark-mode .acessibilidade-widget { background: #1e293b !important; border-color: #475569 !important; }
+        body.dark-mode .acessibilidade-widget button { color: #94a3b8 !important; }
+        body.dark-mode .acessibilidade-widget button:hover { color: #f8fafc !important; }
+        body.dark-mode .valor { color: #f8fafc; }
+        body.dark-mode .kpi-cards .card p#kpi-frete { color: #cbd5e1 !important; }
+
+        /* BAIXO CONTRASTE */
+        body.low-contrast { background-color: #e2e8f0 !important; color: #64748b !important; }
+        body.low-contrast .card { background-color: #f1f5f9 !important; box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+        body.low-contrast h1, body.low-contrast h2, body.low-contrast h3 { color: #475569 !important; }
+        body.low-contrast .valor, body.low-contrast strong { color: #64748b !important; font-weight: 500 !important; }
+        body.low-contrast .badge { background-color: #e2e8f0 !important; color: #64748b !important; border: 1px solid #cbd5e1 !important; }
+
+        /* FONTES DINÂMICAS */
+        body.font-small, body.font-small input, body.font-small button, body.font-small table td, body.font-small select { font-size: 11px !important; }
+        body.font-small h1 { font-size: 20px !important; }
+        body.font-small h3 { font-size: 14px !important; }
+
+        body.font-large, body.font-large input, body.font-large button, body.font-large table td, body.font-large select { font-size: 16px !important; }
+        body.font-large h1 { font-size: 28px !important; }
+        body.font-large h3 { font-size: 20px !important; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="login-container">
+        <form id="formLogin" class="login-box" onsubmit="event.preventDefault(); fazerLogin(); return false;">
+            <img src="assets/logo_site.png" alt="Logo" onerror="this.src='assets/logo_site.png';">
+            <h2>Nexora Global</h2>
+            <div class="input-group">
+                <input type="text" id="usuarioLogin" placeholder="Usuário corporativo..." required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="senhaLogin" placeholder="Senha de acesso..." required>
+            </div>
+            <button type="submit" class="btn-submit" style="width: 100%;">Autenticar no Sistema</button>
+        </form>
+    </div>
+
+    <div class="app-container" id="main-app" style="display: none;">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/logo_site.png" alt="Logo Nexora Global" onerror="this.src='assets/logo_site.png';">
+                <h2>Nexora<span>Global</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" onclick="mudarAba('dashboard', this)"><i class="ph ph-chart-bar icon"></i> Relatório Nacional</li>
+                    <li onclick="mudarAba('crm', this)"><i class="ph ph-address-book icon"></i> Clientes (CRM)</li>
+                    <li onclick="mudarAba('cadastros', this)"><i class="ph ph-list-plus icon"></i> Cadastros Base</li>
+                    <li onclick="mudarAba('nova-os', this)"><i class="ph ph-plus-circle icon"></i> Nova Venda (NF)</li>
+                    <li onclick="mudarAba('lista-os', this)"><i class="ph ph-clipboard-text icon"></i> Central Logística</li>
+                    <li onclick="fazerLogout()" style="margin-top: 30px; color: #ef4444;"><i class="ph ph-sign-out icon"></i> Sair do Sistema</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <section id="dashboard" class="aba-conteudo">
+                <header class="content-header flex-header">
+                    <div>
+                        <h1>Comando Nacional de Operações</h1>
+                        <p>Visão executiva de faturamento, logística e risco de crédito do ERP.</p>
+                    </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button onclick="abrirModalLogs()" class="btn-submit" style="background-color: #f59e0b;">
+                            <i class="ph ph-shield-warning"></i> Auditoria de Acesso
+                        </button>
+                        <button onclick="exportarExcel()" class="btn-submit" style="background-color: #16A34A;">
+                            <i class="ph ph-file-xls"></i> Relatório Executivo
+                        </button>
+                        <div class="filtro-mes-container">
+                            <input type="text" id="mesDashboard" placeholder="Selecione o mês...">
+                        </div>
+                    </div>
+                </header>
+
+                <div class="kpi-cards">
+                    <div class="card kpi">
+                        <h3>Volume Faturado</h3>
+                        <p id="kpi-faturamento" class="valor destaque-laranja">R$ 0,00</p>
+                    </div>
+                    <div class="card kpi">
+                        <h3>Custo de Frete Nacional</h3>
+                        <p id="kpi-frete" class="valor" style="color: #64748b;">R$ 0,00</p>
+                    </div>
+                    <div class="card kpi">
+                        <h3>Comissões de Afiliados</h3>
+                        <p id="kpi-afiliados" class="valor" style="color: #8b5cf6;">R$ 0,00</p>
+                    </div>
+                    <div class="card kpi">
+                        <h3>Pedidos Despachados</h3>
+                        <p id="kpi-pedidos" class="valor" style="color: #3b82f6;">0</p>
+                    </div>
+                    <div class="card kpi" style="border-left: 4px solid #ef4444;">
+                        <h3>Risco de Inadimplência (IA)</h3>
+                        <p id="kpi-risco" class="valor" style="color: #ef4444;">0%</p>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="card" style="margin-bottom: 0;">
+                        <h3><i class="ph ph-trend-up" style="color: var(--primary-color);"></i> Faturamento Bruto vs Custos Diários</h3>
+                        <div id="graficoReceita"></div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <h3><i class="ph ph-map-pin" style="color: #3b82f6;"></i> Distribuição por Filiais</h3>
+                        <div id="graficoFiliais"></div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="gap: 24px;">
+                    <div class="card">
+                        <h3><i class="ph ph-shield-warning" style="color: #ef4444;"></i> Modelo de Credit Scoring da Carteira</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Análise preditiva de risco baseada no histórico de pagamentos e variáveis de mercado.</p>
+                        <div id="graficoRiscoCredito"></div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="ph ph-medal" style="color: #f59e0b;"></i> Top Afiliados e Representantes</h3>
+                        <ul id="listaRankingAfiliados" class="lista-cadastros" style="max-height: 300px; padding-top: 10px;"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="crm" class="aba-conteudo">
+                <header class="content-header flex-header">
+                    <div>
+                        <h1>Inteligência de Vendas e CRM</h1>
+                        <p>Análise de Lifetime Value (LTV), segmentação da carteira (Curva ABC) e dossiês de clientes.</p>
+                    </div>
+                    <button onclick="carregarListaClientes()" class="btn-submit" style="background-color: #3b82f6;">
+                        <i class="ph ph-arrows-clockwise"></i> Recalcular Carteira
+                    </button>
+                </header>
+
+                <div class="kpi-cards">
+                    <div class="card kpi">
+                        <h3>Clientes Ativos</h3>
+                        <p id="kpi-crm-total" class="valor" style="color: #3b82f6;">0</p>
+                    </div>
+                    <div class="card kpi">
+                        <h3>Ticket Médio Nacional</h3>
+                        <p id="kpi-crm-ticket" class="valor" style="color: #8b5cf6;">R$ 0,00</p>
+                    </div>
+                    <div class="card kpi" style="border-left: 4px solid #10b981;">
+                        <h3>LTV Acumulado (Carteira)</h3>
+                        <p id="kpi-crm-ltv" class="valor destaque-laranja">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <h3><i class="ph ph-chart-pie-slice" style="color: #f59e0b;"></i> Classificação Curva ABC (Receita)</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Distribuição do faturamento entre clientes VIPs, Regulares e Casuais.</p>
+                        <div id="graficoCurvaABC"></div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="ph ph-calendar-check" style="color: #10b981;"></i> Frequência e Retenção</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Evolução de compras repetidas nos últimos 6 meses.</p>
+                        <div id="graficoRetencao"></div>
+                    </div>
+                </div>
+
+                <div class="card form-bloco" style="margin-bottom: 24px;">
+                    <h3 id="tituloFormCliente"><i class="ph ph-user-plus"></i> Cadastrar Novo Cliente</h3>
+                    <form id="formCliente">
+                        <div class="grid-2">
+                            <div class="input-group"><label>Nome / Razão Social</label><input type="text" id="cliNome" placeholder="Ex: Marcos Silva ou Empresa X" required></div>
+                            <div class="input-group"><label>CPF / CNPJ (Busca Automática)</label><input type="text" id="cliDocumento" class="mascara-cpfcnpj" placeholder="Ex: 000.000.000-00 ou 00.000.000/0000-00" onblur="buscarCNPJ(this.value, 'cliNome', 'cliEndereco')" required></div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group"><label>Endereço Completo de Faturamento / Obra</label><input type="text" id="cliEndereco" placeholder="Ex: Rua Atlântida, 710 - Foz do Iguaçu/PR" required></div>
+                            <div class="input-group"><label>Telefone de Contato</label><input type="text" id="cliTelefone" class="mascara-telefone" placeholder="Ex: (45) 99999-9999"></div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" id="btnSubmitCliente" class="btn-submit" style="flex: 1;"><i class="ph ph-check-circle"></i> Salvar Cliente na Base</button>
+                            <button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('clientes', 'formCliente', 'btnSubmitCliente', '<i class=\'ph ph-check-circle\'></i> Salvar Cliente na Base')"><i class="ph ph-x"></i> Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card table-responsive">
+                    <table id="tabelaCRM">
+                        <thead><tr><th>Nome do Cliente / Empresa</th><th>Classificação</th><th>Ticket Médio</th><th>LTV (Faturamento Total)</th><th style="text-align: right;">Ações</th></tr></thead>
+                        <tbody id="corpoTabelaCRM"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="cadastros" class="aba-conteudo">
+                <header class="content-header">
+                    <h1>Painel de Cadastros Estruturais</h1>
+                    <p>Gerencie os pilares da cadeia de suprimentos, logística de distribuição e financeiro B2B.</p>
+                </header>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; white-space: nowrap;">
+                    <button type="button" class="btn-submit" style="background: #0f172a; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-matriz')"><i class="ph ph-buildings"></i> Matriz</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-pagamentos')"><i class="ph ph-currency-circle-dollar"></i> Financeiro / Regras</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-produtos')"><i class="ph ph-package"></i> Produtos</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-fornecedores')"><i class="ph ph-factory"></i> Fornecedores</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-transportadoras')"><i class="ph ph-truck"></i> Transportadoras</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-afiliados')"><i class="ph ph-users-four"></i> Afiliadas</button>
+                    <button type="button" class="btn-submit" style="background: #475569; padding: 10px 20px; font-size: 14px;" onclick="alternarSubAbaCadastro('sub-vendedores')"><i class="ph ph-identification-badge"></i> Equipe</button>
+                </div>
+
+                <div id="sub-pagamentos" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3><i class="ph ph-credit-card"></i> 1. Forma de Pagamento Base</h3>
+                            <form id="formFormaPagamento">
+                                <div class="input-group"><label>Nome da Forma Base</label><input type="text" id="formaPagNome" placeholder="Ex: Boleto Bancário, Cartão de Crédito..." required></div>
+                                <button type="submit" class="btn-submit" style="background-color: #3b82f6; width: 100%;"><i class="ph ph-plus-circle"></i> Cadastrar Forma</button>
+                            </form>
+                            
+                            <h3 style="margin-top: 30px;"><i class="ph ph-list-numbers"></i> Formas Ativas (Matriz)</h3>
+                            <div class="table-responsive" style="max-height: 200px;">
+                                <table>
+                                    <thead><tr><th>Forma Base</th></tr></thead>
+                                    <tbody id="tabelaFormasPagamento"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card form-bloco">
+                            <h3><i class="ph ph-calendar-plus"></i> 2. Condição de Faturamento</h3>
+                            <form id="formCondicaoPagamento">
+                                <div class="grid-2">
+                                    <div class="input-group"><label>Forma Base</label><select id="condFormaId" required></select></div>
+                                    <div class="input-group"><label>Descrição / Título da Regra</label><input type="text" id="condDescricao" placeholder="Ex: Boleto 30/60/90" required></div>
+                                </div>
+                                
+                                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 15px;">
+                                    <h4 style="font-size: 13px; color: #475569; margin-bottom: 10px;">Adicionar Parcela à Regra:</h4>
+                                    <div class="grid-2" style="grid-template-columns: 1fr 1fr auto; align-items: end;">
+                                        <div class="input-group" style="margin-bottom: 0;"><label>Dias para Vencimento</label><input type="number" id="parcelaDias" min="0" placeholder="Ex: 30"></div>
+                                        <div class="input-group" style="margin-bottom: 0;"><label>Fatia da Nota (%)</label><input type="number" id="parcelaPercentual" step="0.01" min="0" max="100" placeholder="Ex: 33.33"></div>
+                                        <button type="button" class="btn-submit" style="margin-bottom: 0;" onclick="adicionarLinhaParcela()"><i class="ph ph-plus"></i></button>
+                                    </div>
+                                    <table style="margin-top: 15px; width: 100%; border-collapse: collapse; font-size: 12px;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid #cbd5e1;">
+                                                <th style="text-align: left; padding: 5px;">Parcela</th>
+                                                <th style="text-align: left; padding: 5px;">Vencimento</th>
+                                                <th style="text-align: right; padding: 5px;">% Cobrado</th>
+                                                <th style="text-align: right; padding: 5px;">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="listaParcelasCriadas"></tbody>
+                                    </table>
+                                </div>
+                                <button type="submit" class="btn-submit" style="background-color: #10b981; width: 100%;"><i class="ph ph-floppy-disk"></i> Salvar Condição Completa</button>
+                            </form>
+                            
+                            <div class="table-responsive" style="max-height: 200px; margin-top: 20px;">
+                                <table>
+                                    <thead><tr><th>Condição</th><th>Qtd Parcelas</th><th style="text-align: right;">Ação</th></tr></thead>
+                                    <tbody id="tabelaCondicoesPagamento"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-matriz" class="sub-cadastro-bloco">
+                    <div class="card form-bloco">
+                        <h3><i class="ph ph-buildings"></i> Dados Fiscais da Minha Empresa</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Esses dados serão impressos no cabeçalho do PDF das Notas Fiscais (DANFE).</p>
+                        <form id="formMatriz">
+                            <div class="grid-2">
+                                <div class="input-group"><label>Nome Fantasia / Divisão</label><input type="text" id="matrizNome" placeholder="Ex: Pro Versátil Matriz" required></div>
+                                <div class="input-group"><label>Razão Social</label><input type="text" id="matrizRazao" placeholder="Ex: PRO VERSATIL COMERCIO S/A" required></div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group"><label>CNPJ da Matriz</label><input type="text" id="matrizCnpj" class="mascara-cpfcnpj" placeholder="Ex: 00.000.000/0001-00" required></div>
+                                <div class="input-group"><label>Telefone de Contato</label><input type="text" id="matrizTelefone" class="mascara-telefone" placeholder="Ex: (11) 4004-0000" required></div>
+                            </div>
+                            <div class="input-group"><label>Endereço Completo</label><input type="text" id="matrizEndereco" placeholder="Ex: Av. Brasil, 1000 - São Paulo/SP" required></div>
+                            <button type="submit" class="btn-submit" style="width: 100%;"><i class="ph ph-floppy-disk"></i> Atualizar Dados da Matriz</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="sub-produtos" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3 id="tituloFormProduto"><i class="ph ph-package"></i> Novo Produto Comercial</h3>
+                            <form id="formProduto">
+                                <div class="grid-2"><div class="input-group"><label>Código SKU</label><input type="text" id="prodSku" placeholder="Ex: FER-GAV-001" required></div><div class="input-group"><label>Nome Comercial</label><input type="text" id="prodNome" placeholder="Ex: Bobina de Aço 1.2mm" required></div></div>
+                                <div class="grid-2"><div class="input-group"><label>Preço Custo</label><input type="text" id="prodPrecoCusto" class="moeda" placeholder="R$ 0,00" required></div><div class="input-group"><label>Preço Venda</label><input type="text" id="prodPrecoVenda" class="moeda" placeholder="R$ 0,00" required></div></div>
+                                <div class="grid-2"><div class="input-group"><label>Estoque Inicial</label><input type="number" id="prodEstoque" placeholder="Ex: 500" required></div><div class="input-group"><label>Fornecedor Origem</label><select id="prodFornecedorId" required></select></div></div>
+                                <div style="display: flex; gap: 10px;"><button type="submit" id="btnSubmitProduto" class="btn-submit" style="flex: 1;"><i class="ph ph-floppy-disk"></i> Salvar Produto</button><button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('produtos', 'formProduto', 'btnSubmitProduto', '<i class=\'ph ph-floppy-disk\'></i> Salvar Produto')"><i class="ph ph-x"></i> Cancelar</button></div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3>Catálogo de Produtos</h3>
+                            <div class="table-responsive" style="max-height: 400px;"><table><thead><tr><th>SKU / Item</th><th>Preço Venda</th><th>Estoque</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="tabelaListaProdutos"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-fornecedores" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3 id="tituloFormFornecedor"><i class="ph ph-factory"></i> Cadastrar Fornecedor Industrial</h3>
+                            <form id="formFornecedor">
+                                <div class="input-group"><label>CNPJ</label><input type="text" id="fornCnpj" class="mascara-cpfcnpj" placeholder="Ex: 00.000.000/0001-00" onblur="buscarCNPJ(this.value, 'fornRazaoSocial', 'fornContato')" required></div>
+                                <div class="input-group"><label>Razão Social</label><input type="text" id="fornRazaoSocial" placeholder="Preenchido automaticamente..." required></div>
+                                <div class="input-group"><label>Contato</label><textarea id="fornContato" rows="3" placeholder="Ex: vendas@fornecedor.com.br" required></textarea></div>
+                                <div style="display: flex; gap: 10px;"><button type="submit" id="btnSubmitFornecedor" class="btn-submit" style="background-color: #10b981; flex: 1;"><i class="ph ph-handshake"></i> Salvar Fornecedor</button><button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('fornecedores', 'formFornecedor', 'btnSubmitFornecedor', '<i class=\'ph ph-handshake\'></i> Salvar Fornecedor')"><i class="ph ph-x"></i> Cancelar</button></div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3>Matriz de Fornecedores Ativos</h3>
+                            <div class="table-responsive" style="max-height: 400px;"><table><thead><tr><th>Razão Social</th><th>Documento</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="tabelaListaFornecedores"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-transportadoras" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3 id="tituloFormTransportadora"><i class="ph ph-truck"></i> Configurar Operador Logístico</h3>
+                            <form id="formTransportadora">
+                                <div class="input-group"><label>CNPJ da Transportadora</label><input type="text" id="transpCnpj" class="mascara-cpfcnpj" placeholder="Ex: 00.000.000/0001-00" onblur="buscarCNPJ(this.value, 'transpNome', null)" required></div>
+                                <div class="input-group"><label>Nome Fantasia</label><input type="text" id="transpNome" placeholder="Ex: Alfa Logística" required></div>
+                                <div class="input-group"><label>Taxa Base Frete (R$)</label><input type="text" id="transpFreteBase" class="moeda" placeholder="R$ 0,00" required></div>
+                                <div style="display: flex; gap: 10px;"><button type="submit" id="btnSubmitTransportadora" class="btn-submit" style="background-color: #3b82f6; flex: 1;"><i class="ph ph-shield-check"></i> Salvar Transportadora</button><button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('transportadoras', 'formTransportadora', 'btnSubmitTransportadora', '<i class=\'ph ph-shield-check\'></i> Salvar Transportadora')"><i class="ph ph-x"></i> Cancelar</button></div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3>Frota Homologada</h3>
+                            <div class="table-responsive" style="max-height: 400px;"><table><thead><tr><th>Operador Logístico</th><th>Taxa Despacho</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="tabelaListaTransportadoras"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-afiliados" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3 id="tituloFormAfiliado"><i class="ph ph-buildings"></i> Nova Empresa Filiada (B2B)</h3>
+                            <form id="formAfiliado">
+                                <div class="input-group"><label>CNPJ Empresa</label><input type="text" id="afilCnpj" class="mascara-cpfcnpj" placeholder="Ex: 00.000.000/0001-00" onblur="buscarCNPJ(this.value, 'afilNome', null)" required></div>
+                                <div class="input-group"><label>Razão Social</label><input type="text" id="afilNome" placeholder="Ex: Distribuidora Sul Ltda" required></div>
+                                <div class="grid-2"><div class="input-group"><label>País</label><input type="text" id="afilPais" value="Brasil" required></div><div class="input-group"><label>Cidade</label><input type="text" id="afilCidade" placeholder="Ex: Curitiba" required></div></div>
+                                <div class="grid-2"><div class="input-group"><label>Código Tracker</label><input type="text" id="afilCodigo" placeholder="Ex: D-SUL" style="text-transform: uppercase;" required></div><div class="input-group"><label>Comissão (%)</label><input type="number" id="afilComissao" min="0" max="100" step="0.1" placeholder="Ex: 5.5" required></div></div>
+                                <div style="display: flex; gap: 10px;"><button type="submit" id="btnSubmitAfiliado" class="btn-submit" style="background-color: #8b5cf6; flex: 1;"><i class="ph ph-link-simple"></i> Salvar Empresa</button><button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('afiliados', 'formAfiliado', 'btnSubmitAfiliado', '<i class=\'ph ph-link-simple\'></i> Salvar Empresa Filiada')"><i class="ph ph-x"></i> Cancelar</button></div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3>Rede de Empresas Filiadas</h3>
+                            <div class="table-responsive" style="max-height: 400px;"><table><thead><tr><th>Empresa / CNPJ</th><th>Cidade/País</th><th>Comissão</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="tabelaListaAfiliados"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-vendedores" class="sub-cadastro-bloco" style="display: none;">
+                    <div class="grid-2">
+                        <div class="card form-bloco">
+                            <h3 id="tituloFormVendedor"><i class="ph ph-identification-badge"></i> Cadastrar Novo Vendedor</h3>
+                            <form id="formVendedor">
+                                <div class="input-group"><label>Nome do Colaborador</label><input type="text" id="vendNome" placeholder="Ex: Marcos Silva" required></div>
+                                <div class="input-group"><label>Empresa Filiada Vinculada</label><select id="vendAfiliadoId"><option value="">Operação Direta da Matriz</option></select></div>
+                                <div class="grid-2"><div class="input-group"><label>Cargo / Função</label><input type="text" id="vendCargo" placeholder="Ex: Vendedor Comercial" required></div><div class="input-group"><label>Salário Fixo Base</label><input type="text" id="vendSalario" class="moeda" placeholder="R$ 0,00" required></div></div>
+                                <div style="display: flex; gap: 10px;"><button type="submit" id="btnSubmitVendedor" class="btn-submit" style="background-color: #2563eb; flex: 1;"><i class="ph ph-user-plus"></i> Registrar Colaborador</button><button type="button" class="btn-submit btn-cancelar-edicao" style="background: #ef4444; display: none;" onclick="cancelarEdicao('funcionarios', 'formVendedor', 'btnSubmitVendedor', '<i class=\'ph ph-user-plus\'></i> Registrar Colaborador')"><i class="ph ph-x"></i> Cancelar</button></div>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <h3>Equipe Comercial</h3>
+                            <div class="table-responsive" style="max-height: 400px;"><table><thead><tr><th>Nome</th><th>Empresa Vinculada</th><th>Salário Base</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="tabelaListaVendedores"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="nova-os" class="aba-conteudo">
+                <header class="content-header">
+                    <h1>Emissão de Nota Fiscal (Vendas)</h1>
+                    <p>Preencha os dados logísticos e monte o carrinho para faturamento e despacho nacional em lote.</p>
+                </header>
+
+                <form id="formNovaNFe" class="form-grid">
+                    <div class="card form-bloco">
+                        <h3><i class="ph ph-identification-card"></i> 1. Identificação da Venda</h3>
+                        <div class="grid-2">
+                            <div class="input-group"><label>Filial Emissora</label><select id="nfeFilialId" onchange="filtrarVendedoresPorFilial()" required></select></div>
+                            <div class="input-group"><label>Número da NF / Pedido</label><input type="text" id="nfeNumero" placeholder="Ex: NF-10045" required></div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group"><label>Data da Emissão</label><input type="datetime-local" id="nfeDataEmissao" required></div>
+                            <div class="input-group"><label>Vendedor Responsável</label><select id="nfeVendedorId" required></select></div>
+                        </div>
+                        <div class="input-group"><label>Cliente (Destinatário)</label><select id="nfeClienteId" required></select></div>
+                    </div>
+
+                    <div class="card form-bloco">
+                        <h3><i class="ph ph-credit-card"></i> 2. Condições e Logística</h3>
+                        <div class="input-group"><label>Condição de Faturamento / Pagamento</label><select id="nfeCondicaoPagamentoId" required></select></div>
+                        
+                        <div class="grid-2">
+                            <div class="input-group"><label>Operador Logístico</label><select id="nfeTransportadoraId" onchange="atualizarFreteBase()" required></select></div>
+                            <div class="input-group"><label>Valor do Frete Efetivo (R$)</label><input type="text" id="nfeFrete" class="moeda" placeholder="R$ 0,00" value="R$ 0,00" oninput="calcularTotaisCarrinho()" required></div>
+                            <div class="input-group" style="grid-column: span 2;"><label>Empresa Filiada Intermediadora (Opcional)</label><select id="nfeAfiliadoId"><option value="">Venda Direta da Matriz</option></select></div>
+                        </div>
+                    </div>
+
+                    <div class="card form-bloco">
+                        <h3><i class="ph ph-shopping-cart"></i> 3. Produtos (Carrinho)</h3>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 20px;">
+                            <div class="grid-2" style="grid-template-columns: 2fr 1fr auto; align-items: end;">
+                                <div class="input-group" style="margin-bottom: 0;"><label>Selecionar Produto</label><select id="nfeProdutoSelect"></select></div>
+                                <div class="input-group" style="margin-bottom: 0;"><label>Quantidade</label><input type="number" id="nfeProdutoQtd" min="1" value="1" placeholder="Ex: 1"></div>
+                                <button type="button" class="btn-submit" style="margin-bottom: 0;" onclick="adicionarItemCarrinho()"><i class="ph ph-plus-circle"></i> Inserir</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Produto / SKU</th><th>Qtd.</th><th>Preço Unit.</th><th>Subtotal</th><th style="text-align: right;">Remover</th></tr></thead>
+                                <tbody id="tabelaCarrinhoItens"><tr id="linhaVaziaCarrinho"><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">O carrinho está vazio.</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card form-bloco" style="background: #0f172a; color: white; border: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                            <div>
+                                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 5px;">Subtotal Produtos: <strong id="resumoSubtotal" style="color: white; font-size: 16px;">R$ 0,00</strong></p>
+                                <p style="color: #94a3b8; font-size: 14px;">Frete Logístico: <strong id="resumoFrete" style="color: white; font-size: 16px;">R$ 0,00</strong></p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Valor Total da Nota</p>
+                                <h2 id="resumoTotalGeral" style="color: #10b981; font-size: 32px; margin-top: 5px;">R$ 0,00</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="width: 100%; font-size: 18px; padding: 18px;"><i class="ph ph-check-circle"></i> Faturar Nota Fiscal e Descontar Estoque</button>
+                </form>
+            </section>
+
+            <section id="lista-os" class="aba-conteudo">
+                <header class="content-header flex-header">
+                    <div>
+                        <h1>Central de Expedição e Logística</h1>
+                        <p>Acompanhe o faturamento, visualize os itens da nota e gerencie o fluxo de transporte nacional.</p>
+                    </div>
+                    <button onclick="carregarHistoricoNotas()" class="btn-submit" style="background-color: #3b82f6;"><i class="ph ph-arrows-clockwise"></i> Atualizar Painel</button>
+                </header>
+                <div class="card table-responsive">
+                    <table>
+                        <thead><tr><th>Nota Fiscal</th><th>Data de Emissão</th><th>Cliente / Destino</th><th>Status Logístico</th><th style="text-align: right;">Ações</th></tr></thead>
+                        <tbody id="corpoTabelaNFe"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div id="modalNFeDetalhes" class="modal">
+                <div class="modal-content card" style="max-width: 850px; width: 95%;">
+                    <span class="close-modal" onclick="fecharModal()">&times;</span>
+                    <h2><i class="ph ph-receipt" style="color: var(--primary-color);"></i> Detalhamento da Nota Fiscal</h2>
+                    <div id="conteudoNFeDetalhes" class="detalhes-grid"></div>
+                    <h4 style="margin-top: 25px; margin-bottom: 15px; font-size: 14px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">ITENS FATURADOS</h4>
+                    <div class="table-responsive" style="max-height: 250px;">
+                        <table>
+                            <thead><tr><th>Cód. Produto</th><th style="text-align: center;">Qtd</th><th style="text-align: right;">Preço Unit.</th><th style="text-align: right;">Subtotal</th></tr></thead>
+                            <tbody id="tabelaItensModal"></tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                        <button class="btn-submit" id="btnImprimirNFeModal" style="background-color: #0f172a;"><i class="ph ph-printer"></i> Imprimir DANFE / Pedido</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modalCRM" class="modal">
+                <div class="modal-content card" style="max-width: 800px; width: 95%;">
+                    <span class="close-modal" onclick="fecharModal()">&times;</span>
+                    <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;"><i class="ph ph-user-focus" style="color: var(--primary-color);"></i> Visão 360º do Cliente</h2>
+                    <div id="conteudoCRM" class="detalhes-grid"></div>
+                    <h4 style="margin-top: 25px; margin-bottom: 15px; font-size: 14px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">HISTÓRICO CRONOLÓGICO DE PEDIDOS</h4>
+                    <div class="table-responsive" style="max-height: 250px;">
+                        <table>
+                            <thead><tr><th style="background: #f8fafc; font-size: 11px;">Nota Fiscal</th><th style="background: #f8fafc; font-size: 11px;">Data Emissão</th><th style="background: #f8fafc; font-size: 11px;">Status</th><th style="background: #f8fafc; font-size: 11px; text-align: right;">Valor Faturado</th></tr></thead>
+                            <tbody id="listaHistoricoCRM"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modalLogs" class="modal">
+                <div class="modal-content card" style="max-width: 750px; width: 95%;">
+                    <span class="close-modal" onclick="fecharModal()">&times;</span>
+                    <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="ph ph-shield-check" style="color: #f59e0b;"></i> Auditoria de Segurança (Logs OAUTH2)
+                    </h2>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">Registro dos últimos 50 eventos de tentativa de acesso e requisições de Tokens JWT no sistema.</p>
+                    <div class="table-responsive" style="max-height: 350px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="background: #f8fafc; font-size: 11px;">Data/Hora</th>
+                                    <th style="background: #f8fafc; font-size: 11px;">Usuário Solicitante</th>
+                                    <th style="background: #f8fafc; font-size: 11px;">IP Origem</th>
+                                    <th style="background: #f8fafc; font-size: 11px;">Status da Autenticação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaLogs"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- WIDGET FLUTUANTE DE ACESSIBILIDADE -->
+        <div class="acessibilidade-widget">
+            <button onclick="toggleDarkMode()" title="Modo Escuro / Claro"><i class="ph ph-moon"></i></button>
+            <button onclick="mudarTamanhoFonte(-1)" title="Diminuir Fonte"><i class="ph ph-text-a-under"></i></button>
+            <button onclick="mudarTamanhoFonte(1)" title="Aumentar Fonte"><i class="ph ph-text-a-under" style="font-size: 1.2em;"></i></button>
+            <button onclick="toggleBaixoContraste()" title="Modo Baixo Contraste"><i class="ph ph-eye-slash"></i></button>
+        </div>
+
+    </div>
+    <script src="script.js?v=2.2"></script>
+</body>
+</html>
